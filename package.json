@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "tsx watch server/src/index.ts",
     "build": "tsc -p tsconfig.json",
-    "start": "node --enable-source-maps dist/index.js",
+    "start": "node --enable-source-maps dist/server/src/index.js",
     "test": "node --test --import tsx server/tests/**/*.test.ts"
   },
   "dependencies": {

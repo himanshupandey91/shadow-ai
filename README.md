@@ -1,25 +1,25 @@
 # SHADOW AI
 
-SHADOW AI is a production-oriented AI assistant designed for chat, deep research, coding assistance, and secure document/image analysis. The project is built as a full-stack TypeScript application with a responsive futuristic UI and a server-side API architecture.
+SHADOW AI is a production-oriented AI assistant for chat, deep research, coding assistance, and secure file analysis. The project includes a modular TypeScript backend, a responsive futuristic UI, and installable PWA support designed for Android and desktop browsers.
 
 ## Features
 
 - AI chat with persistent conversation history
-- Provider-independent LLM architecture for OpenAI-compatible APIs
+- Provider-independent LLM abstraction for OpenAI-compatible APIs
 - Deep research workflow with citations and source links
-- File analysis for TXT, CSV, DOCX, PDF, and image inputs
-- RSS-like conversations and export tools
-- PWA install support for Android and desktop
-- Hindi and English UI support
-- Secure environment-based configuration
-- Memory controls and user consent flows
-- Rate limiting, validation, and server-side security headers
+- File analysis for TXT, CSV, DOCX, PDF, and image uploads
+- Memory controls with user consent and deletion support
+- English and Hindi UI mode switching
+- Secure environment-based API key storage
+- PWA manifest and service worker for installability
+- Queries and exports for conversation management
+- Comprehensive test suite for API, security, auth, and error paths
 
-## Project structure
+## Repository structure
 
-- `server/src` — backend API, services, providers, validation, and persistence
-- `public/` — static frontend with mobile-first UI and PWA files
-- `server/tests/` — API and security tests
+- `server/src` — backend, services, providers, validation, and persistence
+- `public/` — static frontend, theme, manifest, and service worker
+- `server/tests/` — unit and API tests
 
 ## Prerequisites
 
@@ -43,7 +43,7 @@ npm install
 npm run dev
 ```
 
-Then open:
+Open:
 
 - http://localhost:4000
 
@@ -54,32 +54,31 @@ npm run build
 npm start
 ```
 
-## Environment configuration
+## Security and configuration notes
 
-The backend expects values in `.env` for secure server-side storage. The following keys are supported:
+- API keys are stored only in `.env` or server-side secret storage.
+- Frontend code never receives raw secrets.
+- File uploads are validated and size-limited.
+- Rate limiting and security headers are enabled.
+- PWA support does not claim to be a native APK.
 
-- `OPENAI_API_KEY` — API key for OpenAI-compatible networks
-- `OPENAI_BASE_URL` — provider base URL (optional)
-- `OPENAI_MODEL` — default model selector
-- `SEARCH_API_KEY` — provider for research endpoints
-- `SEARCH_ENGINE` — `tavily` or `serpapi`
-- `JWT_SECRET` — session secret
-- `DEFAULT_USERNAME` / `DEFAULT_PASSWORD` — initial admin account
+## Environment variables
 
-If credentials or external services are not available, the app stays in a safe, clearly documented configuration state and reveals the exact missing configuration rather than pretending the integration works.
+Supported variables:
 
-## Security notes
+- `OPENAI_API_KEY`
+- `OPENAI_BASE_URL`
+- `OPENAI_MODEL`
+- `SEARCH_API_KEY`
+- `SEARCH_ENGINE`
+- `JWT_SECRET`
+- `DEFAULT_USERNAME`
+- `DEFAULT_PASSWORD`
+- `ALLOWED_ORIGINS`
+- `PORT`
+- `MAX_UPLOAD_SIZE_MB`
 
-- API keys are never placed in frontend code
-- Browser storage never contains secrets
-- All uploads are validated and size-limited
-- Input is sanitized and validated server-side
-- CORS and security headers are enabled
-- Memory deletion is user controlled
-
-## PWA support
-
-The app ships with a web manifest and service worker for installability. This supports Android installation via the browser “Add to Home Screen” flow and is ready for future native wrappers without claiming to be a native APK.
+If you do not configure a real AI provider, the app remains functional in a safe "not configured" state and clearly tells the user what is missing instead of pretending the integration works.
 
 ## Testing
 
@@ -87,13 +86,10 @@ The app ships with a web manifest and service worker for installability. This su
 npm test
 ```
 
-## Deployment notes
+## PWA / Android
 
-- Use a reverse proxy such as Nginx or Traefik in front of the Node server.
-- Keep `.env` outside the repository in production.
-- Prefer managed secrets in hosting providers.
-- Keep the app behind HTTPS in production.
+The application includes a web app manifest and service worker for browser install prompts. On Android, use the browser menu and choose “Add to Home Screen” to install the app as a PWA. This is not a native APK and is ready for future Android client wrapping.
 
 ## License
 
-This project is provided as a working starter and can be adapted for production deployment.
+This project is intentionally scaffolded for extension and adaptation in production deployments.

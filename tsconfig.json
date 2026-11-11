@@ -14,6 +14,6 @@
     "allowSyntheticDefaultImports": true,
     "types": ["node"]
   },
-  "include": ["server/**/*.ts", "public/**/*.js"],
+  "include": ["server/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
