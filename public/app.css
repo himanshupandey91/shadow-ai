@@ -4,13 +4,13 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#050b17" />
-    <meta name="description" content="SHADOW AI — futuristic AI assistant" />
-    <title>SHADOW AI</title>
+    <meta name="description" content="SHADOW AI" />
     <link rel="manifest" href="/manifest.webmanifest" />
     <link rel="stylesheet" href="/app.css" />
+    <title>SHADOW AI</title>
   </head>
   <body>
-    <div id="app" class="app-shell">
+    <div class="app-shell">
       <aside class="sidebar">
         <div class="brand-row">
           <div class="brand-mark">S</div>
@@ -20,28 +20,28 @@
           </div>
         </div>
 
-        <button id="newChatBtn" class="primary-btn">+ <span data-i18n="newChat">New Chat</span></button>
+        <button id="newChatBtn" class="primary-btn">+ New Chat</button>
 
         <nav class="nav-stack">
-          <button class="nav-item active" data-panel="chat-panel"><span data-i18n="chat">Chat</span></button>
-          <button class="nav-item" data-panel="research-panel"><span data-i18n="research">Research</span></button>
-          <button class="nav-item" data-panel="code-panel"><span data-i18n="coding">Coding</span></button>
-          <button class="nav-item" data-panel="files-panel"><span data-i18n="files">Files</span></button>
-          <button class="nav-item" data-panel="memory-panel"><span data-i18n="memory">Memory</span></button>
-          <button class="nav-item" data-panel="settings-panel"><span data-i18n="settings">Settings</span></button>
+          <button class="nav-item active" data-panel="chat-panel">Chat</button>
+          <button class="nav-item" data-panel="research-panel">Research</button>
+          <button class="nav-item" data-panel="code-panel">Coding</button>
+          <button class="nav-item" data-panel="files-panel">Files</button>
+          <button class="nav-item" data-panel="memory-panel">Memory</button>
+          <button class="nav-item" data-panel="settings-panel">Settings</button>
         </nav>
 
         <div class="sidebar-footer">
           <button id="langToggle" class="secondary-btn">हिन्दी / EN</button>
-          <div class="status-dot-row"><span class="status-dot"></span> <span data-i18n="online">Online</span></div>
+          <div class="status-row"><span class="status-dot"></span> Online</div>
         </div>
       </aside>
 
       <main class="workspace">
         <header class="topbar">
           <div>
-            <div class="eyebrow" data-i18n="workspace">Workspace</div>
-            <h1 id="currentConversationTitle">SHADOW AI</h1>
+            <div class="eyebrow">Workspace</div>
+            <h1 id="currentTitle">SHADOW AI</h1>
           </div>
           <div class="header-actions">
             <button id="exportBtn" class="secondary-btn">Export</button>
@@ -50,76 +50,75 @@
         </header>
 
         <section id="chat-panel" class="panel active">
-          <div class="conversation-list" id="conversationList"></div>
+          <div id="conversationList" class="conversation-list"></div>
           <div id="chatMessages" class="chat-messages"></div>
-
           <form id="chatForm" class="composer">
-            <textarea id="chatInput" rows="3" placeholder="Ask SHADOW AI…" data-i18n-placeholder="askPlaceholder"></textarea>
+            <textarea id="chatInput" rows="3" placeholder="Ask SHADOW AI…"></textarea>
             <div class="composer-row">
-              <div class="meta-text" id="usageMeta">Ready</div>
-              <button type="submit" class="primary-btn" data-i18n="send">Send</button>
+              <span class="meta-text">Ready</span>
+              <button type="submit" class="primary-btn">Send</button>
             </div>
           </form>
         </section>
 
         <section id="research-panel" class="panel">
           <div class="panel-card">
-            <h3 data-i18n="research">Deep Research</h3>
+            <h3>Deep Research</h3>
             <form id="researchForm" class="stack-form">
               <textarea id="researchInput" rows="3" placeholder="Research any topic…"></textarea>
-              <button type="submit" class="primary-btn" data-i18n="researchNow">Research</button>
+              <button type="submit" class="primary-btn">Research</button>
             </form>
-            <div id="researchOutput" class="research-output"></div>
+            <div id="researchOutput" class="result-box"></div>
           </div>
         </section>
 
         <section id="code-panel" class="panel">
           <div class="panel-card">
-            <h3 data-i18n="coding">Coding Assistant</h3>
+            <h3>Coding Assistant</h3>
             <form id="codeForm" class="stack-form">
-              <textarea id="codeInput" rows="4" placeholder="Describe a bug, feature, or refactor…"></textarea>
-              <button type="submit" class="primary-btn" data-i18n="generate">Generate</button>
+              <textarea id="codeInput" rows="4" placeholder="Explain a bug, feature, or refactor…"></textarea>
+              <button type="submit" class="primary-btn">Generate</button>
             </form>
-            <div id="codeOutput" class="code-output"></div>
+            <div id="codeOutput" class="result-box"></div>
           </div>
         </section>
 
         <section id="files-panel" class="panel">
           <div class="panel-card">
-            <h3 data-i18n="files">File Analysis</h3>
+            <h3>File Analysis</h3>
             <form id="fileForm" class="stack-form">
-              <input type="file" id="fileInput" accept=".txt,.csv,.pdf,.docx,.png,.jpg,.jpeg,.webp" />
-              <button type="submit" class="primary-btn" data-i18n="analyzeFile">Analyze File</button>
+              <input type="file" id="fileInput" accept=".txt,.csv,.pdf,.docx,.png,.jpg,.jpeg,.webp,.gif" />
+              <button type="submit" class="primary-btn">Analyze File</button>
             </form>
-            <div id="fileOutput" class="file-output"></div>
+            <div id="fileOutput" class="result-box"></div>
           </div>
         </section>
 
         <section id="memory-panel" class="panel">
           <div class="panel-card">
-            <h3 data-i18n="memory">Memory</h3>
+            <h3>Memory</h3>
             <form id="memoryForm" class="stack-form">
-              <textarea id="memoryInput" rows="3" placeholder="Save a memory note…"></textarea>
-              <button type="submit" class="primary-btn" data-i18n="saveMemory">Save Memory</button>
+              <textarea id="memoryInput" rows="3" placeholder="Save a memory…"></textarea>
+              <button type="submit" class="primary-btn">Save Memory</button>
             </form>
-            <div id="memoryOutput" class="memory-output"></div>
+            <div id="memoryOutput" class="result-box"></div>
           </div>
         </section>
 
         <section id="settings-panel" class="panel">
           <div class="panel-card">
-            <h3 data-i18n="settings">Settings</h3>
+            <h3>Settings</h3>
             <label class="field">
-              <span data-i18n="provider">Provider</span>
+              <span>Provider</span>
               <select id="providerSelect">
                 <option value="openai-compatible">OpenAI-compatible</option>
               </select>
             </label>
             <label class="field">
-              <span data-i18n="model">Model</span>
+              <span>Model</span>
               <input id="modelInput" value="gpt-4o-mini" />
             </label>
-            <button id="saveSettingsBtn" class="primary-btn" data-i18n="saveSettings">Save Settings</button>
+            <button id="saveSettingsBtn" class="primary-btn">Save Settings</button>
           </div>
         </section>
       </main>

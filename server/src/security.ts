@@ -1,46 +1,27 @@
-import type { Request, Response, NextFunction } from 'express';
-import rateLimit from 'express-rate-limit';
-import cors from 'cors';
-import helmet from 'helmet';
+import type { NextFunction, Request, Response } from 'express';
 import { config } from './config.js';
+import { createSession, getSessionByToken } from './dataStore.js';
 
-export const apiLimiter = rateLimit({
-  windowMs: 15 * 60 * 1000,
-  max: 100,
-  standardHeaders: true,
-  legacyHeaders: false,
-  message: { error: 'Too many requests. Please slow down.' },
-});
+export type AuthenticatedRequest = Request & {
+  user?: { username: string };
+};
 
-export function applySecurityMiddleware(app: any): void {
-  app.use(helmet({
-    contentSecurityPolicy: {
-      directives: {
-        defaultSrc: ["'self'"],
-        scriptSrc: ["'self'", "'unsafe-inline'"],
-        imgSrc: ["'self'", 'data:', 'https:'],
-        connectSrc: ["'self'", 'https:'],
-        objectSrc: ["'none'"],
-        upgradeInSecureRequests: [],
-      },
-    },
-  }));
+export function login(username: string, password: string): { token: string; username: string } | null {
+  if (username === config.DEFAULT_USERNAME && password === config.DEFAULT_PASSWORD) {
+    const token = createSession(username);
+    return { token, username };
+  }
+  return null;
+}
 
-  app.use(cors({
-    origin: (origin, callback) => {
-      if (!origin || config.allowedOrigins.includes(origin)) {
-        callback(null, true);
-        return;
-      }
-      callback(new Error('Not allowed by CORS'));
-    },
-    credentials: true,
-  }));
+export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+  const token = req.headers.authorization?.replace(/^Bearer\s+/i, '').trim();
+  const session = getSessionByToken(token);
+  if (!session) {
+    res.status(401).json({ error: 'Unauthorized' });
+    return;
+  }
 
-  app.use((req: Request, res: Response, next: NextFunction) => {
-    res.setHeader('X-Content-Type-Options', 'nosniff');
-    res.setHeader('X-Frame-Options', 'SAMEORIGIN');
-    res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
-    next();
-  });
+  (req as AuthenticatedRequest).user = { username: session.username };
+  next();
 }

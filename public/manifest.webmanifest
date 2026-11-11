@@ -1,58 +1,15 @@
 const state = {
-  authToken: localStorage.getItem('shadowToken') || '',
-  activeConversationId: null,
-  language: localStorage.getItem('shadowLang') || 'en',
+  token: localStorage.getItem('shadow-token') || '',
   conversations: [],
+  activeConversationId: null,
+  language: localStorage.getItem('shadow-lang') || 'en',
 };
 
-const translations = {
-  en: {
-    newChat: 'New Chat',
-    chat: 'Chat',
-    research: 'Research',
-    coding: 'Coding',
-    files: 'Files',
-    memory: 'Memory',
-    settings: 'Settings',
-    online: 'Online',
-    workspace: 'Workspace',
-    send: 'Send',
-    askPlaceholder: 'Ask SHADOW AI…',
-    researchNow: 'Research',
-    generate: 'Generate',
-    analyzeFile: 'Analyze File',
-    saveMemory: 'Save Memory',
-    saveSettings: 'Save Settings',
-    provider: 'Provider',
-    model: 'Model',
-  },
-  hi: {
-    newChat: 'नया चैट',
-    chat: 'चैट',
-    research: 'रिसर्च',
-    coding: 'कोडिंग',
-    files: 'फ़ाइलें',
-    memory: 'मेमोरी',
-    settings: 'सेटिंग्स',
-    online: 'ऑनलाइन',
-    workspace: 'वर्कस्पेस',
-    send: 'भेजें',
-    askPlaceholder: 'SHADOW AI से पूछें…',
-    researchNow: 'रिसर्च करें',
-    generate: 'जेनरेट करें',
-    analyzeFile: 'फ़ाइल विश्लेषण',
-    saveMemory: 'मेमोरी सेव करें',
-    saveSettings: 'सेटिंग्स सेव करें',
-    provider: 'प्रदाता',
-    model: 'मॉडल',
-  },
-};
-
-const els = {
+const elements = {
+  conversationList: document.getElementById('conversationList'),
+  chatMessages: document.getElementById('chatMessages'),
   chatForm: document.getElementById('chatForm'),
   chatInput: document.getElementById('chatInput'),
-  chatMessages: document.getElementById('chatMessages'),
-  conversationList: document.getElementById('conversationList'),
   researchForm: document.getElementById('researchForm'),
   researchInput: document.getElementById('researchInput'),
   researchOutput: document.getElementById('researchOutput'),
@@ -65,75 +22,22 @@ const els = {
   memoryForm: document.getElementById('memoryForm'),
   memoryInput: document.getElementById('memoryInput'),
   memoryOutput: document.getElementById('memoryOutput'),
-  langToggle: document.getElementById('langToggle'),
   newChatBtn: document.getElementById('newChatBtn'),
   exportBtn: document.getElementById('exportBtn'),
   logoutBtn: document.getElementById('logoutBtn'),
+  saveSettingsBtn: document.getElementById('saveSettingsBtn'),
   providerSelect: document.getElementById('providerSelect'),
   modelInput: document.getElementById('modelInput'),
-  saveSettingsBtn: document.getElementById('saveSettingsBtn'),
-  currentConversationTitle: document.getElementById('currentConversationTitle'),
+  currentTitle: document.getElementById('currentTitle'),
+  langToggle: document.getElementById('langToggle'),
 };
 
-function applyTranslations() {
-  const locale = translations[state.language] || translations.en;
-  document.querySelectorAll('[data-i18n]').forEach((node) => {
-    const key = node.dataset.i18n;
-    if (locale[key]) {
-      node.textContent = locale[key];
-    }
-  });
-
-  document.querySelectorAll('[data-i18n-placeholder]').forEach((node) => {
-    const key = node.dataset.i18nPlaceholder;
-    if (locale[key]) {
-      node.placeholder = locale[key];
-    }
-  });
-}
-
-function setPanel(panelId) {
-  document.querySelectorAll('.nav-item').forEach((item) => {
-    item.classList.toggle('active', item.dataset.panel === panelId);
-  });
-  document.querySelectorAll('.panel').forEach((panel) => {
-    panel.classList.toggle('active', panel.id === panelId);
-  });
-}
-
-function createMessageBubble(message) {
-  const messageEl = document.createElement('div');
-  messageEl.className = `message ${message.role}`;
-  messageEl.innerHTML = renderMarkdown(message.content);
-  return messageEl;
-}
-
-function renderMarkdown(text) {
-  const escaped = escapeHtml(text)
-    .replace(/\n/g, '<br>')
-    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.*?)\*/g, '<em>$1</em>')
-    .replace(/`([^`]+)`/g, '<code>$1</code>');
-
-  return escaped;
-}
-
-function escapeHtml(value) {
-  return value.replace(/[&<>"']/g, (char) => ({
-    '&': '&amp;',
-    '<': '&lt;',
-    '>': '&gt;',
-    '"': '&quot;',
-    "'": '&#039;',
-  }[char]));
-}
-
-async function api(path, options = {}) {
+async function apiRequest(path, options = {}) {
   const response = await fetch(path, {
     ...options,
     headers: {
       'Content-Type': 'application/json',
-      ...(state.authToken ? { Authorization: `Bearer ${state.authToken}` } : {}),
+      ...(state.token ? { Authorization: `Bearer ${state.token}` } : {}),
       ...(options.headers || {}),
     },
   });
@@ -146,58 +50,64 @@ async function api(path, options = {}) {
   return data;
 }
 
-async function login() {
-  try {
-    const auth = await api('/api/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ username: 'admin', password: 'shadow-ai' }),
-    });
-    state.authToken = auth.token;
-    localStorage.setItem('shadowToken', auth.token);
-    await loadConversations();
-  } catch (error) {
-    console.error('Login failed', error);
-  }
-}
-
-async function loadConversations() {
-  try {
-    const conversations = await api('/api/conversations');
-    state.conversations = conversations;
-    renderConversationList();
-    if (conversations.length) {
-      selectConversation(conversations[0].id);
-    }
-  } catch (error) {
-    console.error(error);
-  }
-}
-
 function renderConversationList() {
-  els.conversationList.innerHTML = '';
+  elements.conversationList.innerHTML = '';
   state.conversations.forEach((conversation) => {
     const button = document.createElement('button');
     button.className = 'conversation-pill';
     button.textContent = conversation.title;
     button.addEventListener('click', () => selectConversation(conversation.id));
-    els.conversationList.appendChild(button);
+    elements.conversationList.appendChild(button);
   });
 }
 
-async function selectConversation(conversationId) {
-  state.activeConversationId = conversationId;
-  const conversation = state.conversations.find((item) => item.id === conversationId);
+function renderMessages(messages = []) {
+  elements.chatMessages.innerHTML = '';
+  messages.forEach((message) => {
+    const item = document.createElement('div');
+    item.className = `message ${message.role}`;
+    item.textContent = message.content;
+    elements.chatMessages.appendChild(item);
+  });
+}
+
+async function login() {
+  try {
+    const data = await apiRequest('/api/auth/login', {
+      method: 'POST',
+      body: JSON.stringify({ username: 'admin', password: 'shadow-ai' }),
+    });
+    state.token = data.token;
+    localStorage.setItem('shadow-token', data.token);
+    await loadConversations();
+  } catch (error) {
+    console.warn('Default login failed:', error.message);
+  }
+}
+
+async function loadConversations() {
+  try {
+    const data = await apiRequest('/api/conversations');
+    state.conversations = data;
+    if (state.conversations.length) {
+      selectConversation(state.conversations[0].id);
+    }
+    renderConversationList();
+  } catch (error) {
+    console.error(error);
+  }
+}
+
+function selectConversation(id) {
+  const conversation = state.conversations.find((item) => item.id === id);
   if (!conversation) return;
-
-  els.currentConversationTitle.textContent = conversation.title;
-  els.chatMessages.innerHTML = '';
-  conversation.messages.forEach((message) => {
-    els.chatMessages.appendChild(createMessageBubble(message));
-  });
+  state.activeConversationId = id;
+  elements.currentTitle.textContent = conversation.title;
+  renderMessages(conversation.messages || []);
 }
 
-async function newConversation() {
-  const conversation = await api('/api/conversations', {
+async function createConversation() {
+  const conversation = await apiRequest('/api/conversations', {
     method: 'POST',
     body: JSON.stringify({ title: 'New conversation' }),
   });
@@ -206,79 +116,82 @@ async function newConversation() {
   selectConversation(conversation.id);
 }
 
-async function sendChat(event) {
+async function handleChatSubmit(event) {
   event.preventDefault();
-  const prompt = els.chatInput.value.trim();
+  const prompt = elements.chatInput.value.trim();
   if (!prompt) return;
 
-  if (!state.activeConversationId) {
-    await newConversation();
+  if (!state.activeConversationId && !state.conversations.length) {
+    await createConversation();
   }
 
-  const payload = { conversationId: state.activeConversationId, prompt };
-  els.chatInput.value = '';
-
-  const userBubble = createMessageBubble({ role: 'user', content: prompt });
-  els.chatMessages.appendChild(userBubble);
-
-  const response = await api('/api/chat', {
+  const response = await apiRequest('/api/chat', {
     method: 'POST',
-    body: JSON.stringify(payload),
+    body: JSON.stringify({
+      prompt,
+      conversationId: state.activeConversationId,
+    }),
   });
 
-  const bubble = createMessageBubble({ role: 'assistant', content: response.message.content });
-  els.chatMessages.appendChild(bubble);
+  elements.chatInput.value = '';
+  if (!state.conversations.find((item) => item.id === response.conversationId)) {
+    state.conversations.unshift({
+      id: response.conversationId,
+      title: 'Conversation',
+      messages: [response.message],
+    });
+  }
   await loadConversations();
 }
 
-async function handleResearch(event) {
+async function handleResearchSubmit(event) {
   event.preventDefault();
-  const question = els.researchInput.value.trim();
+  const question = elements.researchInput.value.trim();
   if (!question) return;
 
-  const result = await api('/api/research', {
+  const result = await apiRequest('/api/research', {
     method: 'POST',
     body: JSON.stringify({ question }),
   });
 
-  let html = `<h4>Summary</h4><p>${escapeHtml(result.summary)}</p>`;
+  let html = `<strong>Summary</strong><br>${result.summary.replace(/\n/g, '<br>')}`;
   if (result.sources && result.sources.length) {
-    html += '<div class="source-list">';
+    html += '<div class="source-card">';
     result.sources.forEach((source) => {
-      html += `<div class="source-item"><strong>${escapeHtml(source.title)}</strong><br><a href="${source.url}" target="_blank" rel="noreferrer">${escapeHtml(source.url)}</a><br>${escapeHtml(source.snippet)}</div>`;
+      html += `<div><strong>${source.title}</strong><br><a href="${source.url}" target="_blank" rel="noreferrer">${source.url}</a><br>${source.snippet}</div>`;
     });
     html += '</div>';
   }
-  els.researchOutput.innerHTML = html;
+  elements.researchOutput.innerHTML = html;
 }
 
-async function handleCode(event) {
+async function handleCodeSubmit(event) {
   event.preventDefault();
-  const prompt = els.codeInput.value.trim();
+  const prompt = elements.codeInput.value.trim();
   if (!prompt) return;
 
-  const result = await api('/api/chat', {
+  const result = await apiRequest('/api/chat', {
     method: 'POST',
-    body: JSON.stringify({ conversationId: state.activeConversationId || null, prompt: `You are a coding assistant. ${prompt}` }),
+    body: JSON.stringify({
+      prompt: `You are a coding assistant. ${prompt}`,
+      conversationId: state.activeConversationId,
+    }),
   });
 
-  els.codeOutput.innerHTML = `<pre>${escapeHtml(result.message.content)}</pre>`;
+  elements.codeOutput.innerHTML = `<pre>${result.message.content}</pre>`;
 }
 
-async function handleFileUpload(event) {
+async function handleFileSubmit(event) {
   event.preventDefault();
-  const file = els.fileInput.files[0];
+  const file = elements.fileInput.files[0];
   if (!file) return;
 
-  const formData = new FormData();
-  formData.append('file', file);
-
+  const form = new FormData();
+  form.append('file', file);
   const response = await fetch('/api/files/analyze', {
     method: 'POST',
-    headers: {
-      Authorization: `Bearer ${state.authToken}`,
-    },
-    body: formData,
+    headers: { Authorization: `Bearer ${state.token}` },
+    body: form,
   });
 
   const data = await response.json();
@@ -286,96 +199,96 @@ async function handleFileUpload(event) {
     throw new Error(data.error || 'File analysis failed');
   }
 
-  const result = data.result;
-  els.fileOutput.innerHTML = `
-    <strong>${escapeHtml(result.fileName)}</strong><br>
-    <code>${escapeHtml(result.mimeType)}</code><br>
-    <p>${escapeHtml(result.summary)}</p>
-    <pre>${escapeHtml(result.text)}</pre>
+  const fileResult = data.file;
+  elements.fileOutput.innerHTML = `
+    <strong>${fileResult.name}</strong><br>
+    <code>${fileResult.mimeType}</code><br>
+    <p>${fileResult.summary}</p>
+    <pre>${fileResult.text}</pre>
   `;
-}
-
-async function saveMemory(event) {
-  event.preventDefault();
-  const content = els.memoryInput.value.trim();
-  if (!content) return;
-
-  const memory = await api('/api/memory', {
-    method: 'POST',
-    body: JSON.stringify({ content, source: 'web-ui', consent: true }),
-  });
-
-  els.memoryInput.value = '';
-  await loadMemories();
-  if (memory) {
-    els.memoryOutput.innerHTML = `Saved memory: ${escapeHtml(memory.content)}`;
-  }
 }
 
 async function loadMemories() {
   try {
-    const data = await api('/api/memory');
-    const list = data.memories || [];
-    if (!list.length) {
-      els.memoryOutput.innerHTML = 'No saved memories yet.';
+    const data = await apiRequest('/api/memory');
+    const memories = data.memories || [];
+    if (!memories.length) {
+      elements.memoryOutput.textContent = 'No saved memories yet.';
       return;
     }
-
-    els.memoryOutput.innerHTML = list.map((item) => `<div class="source-item">${escapeHtml(item.content)}</div>`).join('');
+    elements.memoryOutput.innerHTML = memories.map((memory) => `<div class="source-card">${memory.content}</div>`).join('');
   } catch (error) {
-    els.memoryOutput.innerHTML = 'Memory service unavailable.';
+    elements.memoryOutput.textContent = 'Memory unavailable.';
   }
 }
 
-async function saveSettings() {
-  const provider = els.providerSelect.value;
-  const model = els.modelInput.value.trim();
-  await api('/api/settings', {
+async function handleMemorySubmit(event) {
+  event.preventDefault();
+  const content = elements.memoryInput.value.trim();
+  if (!content) return;
+
+  await apiRequest('/api/memory', {
     method: 'POST',
-    body: JSON.stringify({ provider, model }),
+    body: JSON.stringify({ content, source: 'web-ui', consent: true }),
   });
-  alert('Settings saved. Actual secrets remain server-side in environment variables.');
+
+  elements.memoryInput.value = '';
+  await loadMemories();
+}
+
+async function saveSettings() {
+  await apiRequest('/api/settings', {
+    method: 'POST',
+    body: JSON.stringify({ provider: elements.providerSelect.value, model: elements.modelInput.value }),
+  });
+  alert('Settings saved on the server. Secrets remain in environment variables.');
 }
 
 function handleLogout() {
-  localStorage.removeItem('shadowToken');
-  state.authToken = '';
+  localStorage.removeItem('shadow-token');
+  state.token = '';
   window.location.reload();
 }
 
 function handleExport() {
-  if (!state.activeConversationId) return;
-  window.open(`/api/conversations/${state.activeConversationId}/export`, '_blank');
+  const conversationId = state.activeConversationId;
+  if (!conversationId) return;
+  window.open(`/api/conversations/${conversationId}/export`, '_blank');
+}
+
+function setPanel(panelId) {
+  document.querySelectorAll('.nav-item').forEach((item) => item.classList.toggle('active', item.dataset.panel === panelId));
+  document.querySelectorAll('.panel').forEach((panel) => panel.classList.toggle('active', panel.id === panelId));
 }
 
 function bindEvents() {
   document.querySelectorAll('.nav-item').forEach((button) => {
     button.addEventListener('click', () => setPanel(button.dataset.panel));
   });
-
-  els.langToggle.addEventListener('click', () => {
+  elements.newChatBtn.addEventListener('click', createConversation);
+  elements.chatForm.addEventListener('submit', handleChatSubmit);
+  elements.researchForm.addEventListener('submit', handleResearchSubmit);
+  elements.codeForm.addEventListener('submit', handleCodeSubmit);
+  elements.fileForm.addEventListener('submit', handleFileSubmit);
+  elements.memoryForm.addEventListener('submit', handleMemorySubmit);
+  elements.saveSettingsBtn.addEventListener('click', saveSettings);
+  elements.logoutBtn.addEventListener('click', handleLogout);
+  elements.exportBtn.addEventListener('click', handleExport);
+  elements.langToggle.addEventListener('click', () => {
     state.language = state.language === 'en' ? 'hi' : 'en';
-    localStorage.setItem('shadowLang', state.language);
-    applyTranslations();
+    localStorage.setItem('shadow-lang', state.language);
   });
-
-  els.newChatBtn.addEventListener('click', newConversation);
-  els.exportBtn.addEventListener('click', handleExport);
-  els.logoutBtn.addEventListener('click', handleLogout);
-  els.chatForm.addEventListener('submit', sendChat);
-  els.researchForm.addEventListener('submit', handleResearch);
-  els.codeForm.addEventListener('submit', handleCode);
-  els.fileForm.addEventListener('submit', handleFileUpload);
-  els.memoryForm.addEventListener('submit', saveMemory);
-  els.saveSettingsBtn.addEventListener('click', saveSettings);
 }
 
-async function boot() {
+async function bootstrap() {
   bindEvents();
-  applyTranslations();
-  await login();
+  if (state.token) {
+    await loadConversations();
+  } else {
+    await login();
+  }
   await loadMemories();
   setPanel('chat-panel');
 }
 
-boot();
+bootstrap();
