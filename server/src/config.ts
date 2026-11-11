@@ -20,4 +20,4 @@ const envSchema = z.object({
 
 export const config = envSchema.parse(process.env);
 
-export type AppConfig = typeof config;
+export type Config = typeof config;

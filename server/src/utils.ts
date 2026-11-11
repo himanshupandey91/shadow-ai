@@ -62,7 +62,7 @@ export async function searchWeb(query: string): Promise<Array<{ title: string; u
       {
         title: 'Search not configured',
         url: 'https://example.com/configuration',
-        snippet: 'Set SEARCH_API_KEY to enable live web search. This app is ready for a real provider integration.',
+        snippet: 'Set SEARCH_API_KEY to enable live web research. The app is ready for a real provider integration.',
       },
     ];
   }

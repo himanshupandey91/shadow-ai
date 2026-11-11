@@ -8,8 +8,8 @@ import { config } from './config.js';
 import { login, requireAuth } from './auth.js';
 import { applySecurity, apiLimiter } from './security.js';
 import { loadStore, saveStore } from './dataStore.js';
-import { makeId, sanitizeText, safeErrorMessage, buildResearchSummary } from './utils.js';
 import { callLLM, searchWeb } from './llm.js';
+import { makeId, sanitizeText, safeErrorMessage, buildResearchSummary } from './utils.js';
 
 const app = express();
 const upload = multer({
@@ -97,11 +97,11 @@ app.delete('/api/conversations/:id', requireAuth, (req, res) => {
 });
 
 app.get('/api/conversations/search', requireAuth, (req, res) => {
-  const query = sanitizeText(String(req.query.q ?? ''));
+  const query = sanitizeText(String(req.query.q ?? '')).toLowerCase();
   const store = loadStore();
   const results = store.conversations.filter((conversation) => {
     const haystack = `${conversation.title} ${conversation.messages.map((message) => message.content).join(' ')}`.toLowerCase();
-    return haystack.includes(query.toLowerCase());
+    return haystack.includes(query);
   });
   res.json(results);
 });
@@ -149,24 +149,24 @@ app.post('/api/chat', requireAuth, async (req, res) => {
   conversation.updatedAt = new Date().toISOString();
 
   try {
-    const llmResult = await callLLM([
-      ...conversation.messages.slice(-8).map((message) => ({
+    const llmPayload = await callLLM(
+      conversation.messages.slice(-8).map((message) => ({
         role: message.role === 'assistant' ? 'assistant' : 'user',
         content: message.content,
-      })),
-    ]);
+      }))
+    );
 
     const assistantMessage = {
       id: makeId('msg'),
       role: 'assistant' as const,
-      content: llmResult.content,
+      content: llmPayload.content,
       createdAt: new Date().toISOString(),
     };
 
     conversation.messages.push(assistantMessage);
     conversation.updatedAt = new Date().toISOString();
     saveStore(store);
-    res.json({ conversationId: conversation.id, message: assistantMessage, usage: llmResult.usage });
+    res.json({ conversationId: conversation.id, message: assistantMessage, usage: llmPayload.usage });
   } catch (error) {
     const fallback = `The assistant could not generate a response. ${safeErrorMessage(error)}`;
     const assistantMessage = {
@@ -255,8 +255,8 @@ app.post('/api/files/analyze', requireAuth, upload.single('file'), async (req, r
   try {
     let text = '';
     if (file.mimetype === 'application/pdf' || name.endsWith('.pdf')) {
-      const data = await pdfParse(file.buffer);
-      text = data.text ?? '';
+      const parsed = await pdfParse(file.buffer);
+      text = parsed.text ?? '';
     } else if (file.mimetype.includes('word') || name.endsWith('.docx')) {
       const result = await mammoth.extractRawText({ buffer: file.buffer });
       text = result.value ?? '';
@@ -265,14 +265,13 @@ app.post('/api/files/analyze', requireAuth, upload.single('file'), async (req, r
     }
 
     const normalized = sanitizeText(text, 12000);
-    const summary = normalized.slice(0, 500) || 'No readable content found.';
     res.json({
       success: true,
       file: {
         name: file.originalname,
         mimeType: file.mimetype,
         size: file.size,
-        summary,
+        summary: normalized.slice(0, 500) || 'No readable content found.',
         text: normalized,
       },
     });

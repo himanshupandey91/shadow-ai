@@ -32,21 +32,19 @@ export type AppStore = {
 const DATA_DIR = join(process.cwd(), 'server', 'data');
 const STORE_PATH = join(DATA_DIR, 'store.json');
 
-export function ensureStore(): void {
+function ensureStore(): void {
   if (!existsSync(DATA_DIR)) {
     mkdirSync(DATA_DIR, { recursive: true });
   }
-
   if (!existsSync(STORE_PATH)) {
-    const initial: AppStore = { conversations: [], memories: [] };
-    writeFileSync(STORE_PATH, JSON.stringify(initial, null, 2));
+    writeFileSync(STORE_PATH, JSON.stringify({ conversations: [], memories: [] }, null, 2));
   }
 }
 
 export function loadStore(): AppStore {
   ensureStore();
-  const raw = readFileSync(STORE_PATH, 'utf8');
   try {
+    const raw = readFileSync(STORE_PATH, 'utf8');
     const parsed = JSON.parse(raw) as Partial<AppStore>;
     return {
       conversations: parsed.conversations ?? [],

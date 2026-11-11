@@ -1,7 +1,7 @@
+import type { Express, Request, Response, NextFunction } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
 import rateLimit from 'express-rate-limit';
-import type { Express, Request, Response, NextFunction } from 'express';
 import { config } from './config.js';
 
 export const apiLimiter = rateLimit({
@@ -31,7 +31,12 @@ export function applySecurity(app: Express): void {
   app.use(
     cors({
       origin: (origin, callback) => {
-        if (!origin || config.ALLOWED_ORIGINS.split(',').map((s) => s.trim()).includes(origin)) {
+        if (!origin) {
+          callback(null, true);
+          return;
+        }
+        const allowedOrigins = config.ALLOWED_ORIGINS.split(',').map((entry) => entry.trim()).filter(Boolean);
+        if (allowedOrigins.includes(origin)) {
           callback(null, true);
           return;
         }

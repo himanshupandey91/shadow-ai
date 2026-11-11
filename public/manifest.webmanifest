@@ -134,13 +134,6 @@ async function handleChatSubmit(event) {
   });
 
   elements.chatInput.value = '';
-  if (!state.conversations.find((item) => item.id === response.conversationId)) {
-    state.conversations.unshift({
-      id: response.conversationId,
-      title: 'Conversation',
-      messages: [response.message],
-    });
-  }
   await loadConversations();
 }
 

@@ -1,10 +1,10 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { app } from '../src/index.js';
 import http from 'node:http';
+import { app } from '../src/index.js';
 
-function createTestServer() {
-  return new Promise<{ server: http.Server; baseUrl: string }>((resolve) => {
+function createTestServer(): Promise<{ server: http.Server; baseUrl: string }> {
+  return new Promise((resolve) => {
     const server = app.listen(0, () => {
       const { port } = server.address() as any;
       resolve({ server, baseUrl: `http://127.0.0.1:${port}` });
